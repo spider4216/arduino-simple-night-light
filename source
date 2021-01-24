@@ -1,0 +1,69 @@
+const int LIGHT=0;
+const int RLED=11;
+const int GLED=10;
+const int BLED=9;
+const int BUTTON=12;
+
+int ledMode=0;
+int currentButton=0;
+int lastButton=0;
+int lightValue=0;
+int rawData=0;
+
+void setup() {
+  // put your setup code here, to run once:
+  pinMode(RLED, OUTPUT);
+  pinMode(GLED, OUTPUT);
+  pinMode(BLED, OUTPUT);
+  pinMode(BUTTON, INPUT);
+  Serial.begin(9600);
+}
+
+boolean debounce(boolean last) {
+  boolean current = digitalRead(BUTTON);
+  Serial.println(current);
+  if (last != current) {
+    delay(5);
+    current = digitalRead(BUTTON);
+  }
+
+  return current;
+}
+
+void setMode(int mode, int value) {
+  if (mode == 1) {
+    analogWrite(RLED, value);
+    analogWrite(GLED, 0);
+    analogWrite(BLED, 0);
+  } else if (mode == 2) {
+    analogWrite(RLED, 0);
+    analogWrite(GLED, value);
+    analogWrite(BLED, 0);
+  } else if (mode == 3) {
+    analogWrite(RLED, 0);
+    analogWrite(GLED, 0);
+    analogWrite(BLED, value);
+  } else if (mode == 0) {
+    analogWrite(RLED, 0);
+    analogWrite(GLED, 0);
+    analogWrite(BLED, 0);
+  }
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+  currentButton = debounce(lastButton);
+  if (lastButton == LOW && currentButton == HIGH) {
+    ledMode++;
+  }
+  lastButton = currentButton;
+
+  if (ledMode == 4) ledMode=0;
+
+  rawData=analogRead(LIGHT);
+  //Serial.println(rawData);
+  lightValue = map(rawData, 50, 700, 255, 0);
+  lightValue = constrain(lightValue, 0, 255);
+
+  setMode(ledMode, lightValue);
+}
